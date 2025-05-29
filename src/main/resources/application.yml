@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: school-system
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/school-db
+
+kafka:
+  bootstrap-servers: localhost:9092
