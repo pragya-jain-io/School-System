@@ -21,6 +21,7 @@ class StudentService(
                     rollNo = it.rollNo,
                     name = it.name,
                     studentClass = it.studentClass,
+                    dob = it.dob,
                     school = it.school
                 )
                 kafkaTemplate.send("student-onboarding", event)
