@@ -2,6 +2,7 @@ package com.school.system.controller
 
 import com.school.system.model.Student
 import com.school.system.service.StudentService
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Mono
 
@@ -12,8 +13,9 @@ class StudentController(
 ) {
 
     @PostMapping
-    fun createStudent(@RequestBody student: Student): Mono<Student> {
+    fun createStudent(@RequestBody student: Student): Mono<ResponseEntity<Student>> {
         return studentService.createStudent(student)
+            .map { ResponseEntity.ok(it) }
     }
 
     @GetMapping("/{aadhaar}")
