@@ -9,6 +9,4 @@ import org.springframework.data.mongodb.repository.ReactiveMongoRepository
  * Extends ReactiveMongoRepository to provide reactive CRUD operations.
  * The primary key type for Student is String (likely the student's Aadhaar or RollNo).
  */
-interface StudentRepository : ReactiveMongoRepository<Student, String> {
-
-}
+interface StudentRepository : ReactiveMongoRepository<Student, String> {}
