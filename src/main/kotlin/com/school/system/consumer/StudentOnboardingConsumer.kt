@@ -53,7 +53,7 @@ class StudentOnboardingConsumer(
 
         // Create a new RetryEvent object to persist the retry state and metadata
         val retryEvent = RetryEvent(
-            studentRollNo = event.rollNo,
+            aadhaar = event.aadhaar,
             taskType = "CBSE_ONBOARDING",
             requestMetadata = mapOf(
                 "aadhaar" to event.aadhaar,

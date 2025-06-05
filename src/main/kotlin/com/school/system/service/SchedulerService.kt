@@ -35,7 +35,7 @@ class SchedulerService(
         // Fetch all retry events that are still OPEN and due for retry
         retryEventRepository.findByStatusAndNextRunTimeBefore(RetryStatus.OPEN, LocalDateTime.now())
             // Log each matching event for visibility
-            .doOnNext { logger.info("Found task to retry for student: ${it.studentRollNo}, version: ${it.version}") }
+            .doOnNext { logger.info("Found task to retry for student: ${it.aadhaar}, version: ${it.version}") }
             // For each retry event, fetch its retry configuration
             .flatMap { event ->
                 retryConfigRepository.findByTaskType(event.taskType)
@@ -53,7 +53,7 @@ class SchedulerService(
             }
             // Subscribe to start the reactive stream and log the result
             .subscribe(
-                { updated -> logger.info("Retried: ${updated.studentRollNo}, Status: ${updated.status}") },
+                { updated -> logger.info("Retried: ${updated.aadhaar}, Status: ${updated.status}") },
                 { error -> logger.error("Error in retry scheduler: ", error) }
             )
     }
@@ -66,7 +66,7 @@ class SchedulerService(
     private fun processRetry(event: RetryEvent, maxRetry: Int, retryAfterMins: Int): Mono<RetryEvent> {
         // Check if attempt to retry has already reached the configured maximum
         if (event.version >= maxRetry) {
-            logger.info("Max retries reached for ${event.studentRollNo}")
+            logger.info("Max retries reached for ${event.aadhaar}")
             return Mono.empty()
         }
 
@@ -79,7 +79,7 @@ class SchedulerService(
             '2' -> HttpStatus.INTERNAL_SERVER_ERROR to "Internal error"
             else -> HttpStatus.BAD_REQUEST to "Unhandled Aadhaar pattern"
         }
-        logger.info("Processing Aadhaar ending with '$aadhaarLastDigit' for student: ${event.studentRollNo}")
+        logger.info("Processing Aadhaar ending with '$aadhaarLastDigit' for student: ${event.aadhaar}")
 
         // Determine new retry status based on the simulated response
         val newStatus = when (httpStatus) {
@@ -91,7 +91,7 @@ class SchedulerService(
         }
 
         // Log detailed retry update info
-        logger.info("Updating RetryEvent for student: ${event.studentRollNo} | HTTP: $httpStatus | Message: $message | Next Retry: ${LocalDateTime.now().plusMinutes(retryAfterMins.toLong())} | New Status: $newStatus")
+        logger.info("Updating RetryEvent for student: ${event.aadhaar} | HTTP: $httpStatus | Message: $message | Next Retry: ${LocalDateTime.now().plusMinutes(retryAfterMins.toLong())} | New Status: $newStatus")
 
         // Create an updated copy of the event with new status, version, and timing
         val updated = event.copy(

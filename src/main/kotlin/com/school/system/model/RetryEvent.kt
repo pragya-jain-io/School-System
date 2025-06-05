@@ -16,7 +16,7 @@ import java.util.*
 data class RetryEvent(
     @Id
     val retryId: UUID = UUID.randomUUID(),
-    val studentRollNo: String,
+    val aadhaar: String,
     val taskType: String = "CBSE_ONBOARDING",
     val requestMetadata: Map<String, Any>,
     var responseMetadata: Map<String, Any>? = null,
