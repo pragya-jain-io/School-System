@@ -8,6 +8,7 @@ import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import reactor.core.publisher.Mono
 import java.time.LocalDateTime
 
 /**
@@ -30,12 +31,20 @@ class StudentOnboardingConsumer(
         containerFactory = "kafkaListenerFactory"
     )
     fun listen(event: StudentOnboardingEvent) {
-        logger.info("Consumed Kafka event for student rollNo='${event.rollNo}'")
+        retryEventRepository.findByAadhaarAndTaskType(event.aadhaar, "CBSE_ONBOARDING")
+            .switchIfEmpty(Mono.defer {
+                logger.info("No existing RetryEvent found for Aadhaar='${event.aadhaar}'. Proceeding to process.")
+                processEvent(event)
+                Mono.empty()
+            })
+            .subscribe {
+                logger.info("Duplicate event for Aadhaar='${event.aadhaar}'. Skipping.")
+            }
+    }
 
-        // Extract the last digit of the Aadhaar number to simulate API behavior.
+    private fun processEvent(event: StudentOnboardingEvent) {
         val aadhaarLastDigit = event.aadhaar.last()
 
-        // Simulated API response logic based on Aadhaar last digit
         val (httpStatus, responseMessage) = when (aadhaarLastDigit) {
             '0' -> HttpStatus.OK to "Student enrolled successfully"
             '1' -> HttpStatus.CONFLICT to "Student already enrolled"
@@ -43,7 +52,6 @@ class StudentOnboardingConsumer(
             else -> HttpStatus.BAD_REQUEST to "Unhandled Aadhaar pattern"
         }
 
-        // Determine retry status based on simulated response
         val retryStatus = when (httpStatus) {
             HttpStatus.OK -> RetryStatus.CLOSED
             HttpStatus.CONFLICT -> RetryStatus.FAILED
@@ -51,7 +59,6 @@ class StudentOnboardingConsumer(
             else -> RetryStatus.FAILED
         }
 
-        // Create a new RetryEvent object to persist the retry state and metadata
         val retryEvent = RetryEvent(
             aadhaar = event.aadhaar,
             taskType = "CBSE_ONBOARDING",
@@ -63,18 +70,17 @@ class StudentOnboardingConsumer(
                 "school" to event.school,
                 "dob" to event.dob.toString()
             ),
-            responseMetadata = mapOf(   // Save simulated response info
+            responseMetadata = mapOf(
                 "status" to httpStatus.value(),
                 "message" to responseMessage
             ),
             createdDate = LocalDateTime.now(),
             lastRunDate = LocalDateTime.now(),
-            nextRunTime = LocalDateTime.now().plusMinutes(5),   // Schedule next retry (if needed) 5 mins later
-            version = 0, // Retry version starts at 0
+            nextRunTime = LocalDateTime.now().plusMinutes(1),
+            version = 0,
             status = retryStatus
         )
 
-        // Save the retry event asynchronously and log success
         retryEventRepository.save(retryEvent).subscribe {
             logger.info("RetryEvent saved successfully with status='$retryStatus' and HTTP status=${httpStatus.value()}")
         }
