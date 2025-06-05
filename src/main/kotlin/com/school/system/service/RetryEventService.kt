@@ -8,15 +8,28 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 import java.time.LocalDateTime
-import java.util.*
 
+/**
+ * Service responsible for processing onboarding events and managing retry records.
+ * It encapsulates business logic around sending onboarding requests and recording their outcomes.
+ */
 @Service
 class RetryEventService(
-    private val webClient: WebClient,
-    private val retryEventRepository: RetryEventRepository
+    private val webClient: WebClient, // WebClient is used for making non-blocking HTTP calls
+    private val retryEventRepository: RetryEventRepository  // Repository to persist RetryEvent data
 ) {
 
+    /**
+     * Processes an incoming onboarding event by:
+     * 1. Calling the /enroll endpoint
+     * 2. Mapping the response status to RetryStatus
+     * 3. Creating and saving a RetryEvent for auditing or retry purposes
+     *
+     * @param event the onboarding event received from Kafka
+     * @return Mono<Void> - completes when processing is done
+     */
     fun processStudentOnboarding(event: StudentOnboardingEvent): Mono<Void> {
+        // Constructing the request payload from the event
         val requestBody = mapOf(
             "aadhaar" to event.aadhaar,
             "rollNo" to event.rollNo,
@@ -27,8 +40,8 @@ class RetryEventService(
         )
 
         return webClient.post()
-            .uri("/enroll")
-            .bodyValue(requestBody)
+            .uri("/enroll") // External POST API to enroll a student
+            .bodyValue(requestBody) // Setting the request body
             .retrieve()
             .toBodilessEntity()
             .map { response ->
@@ -50,6 +63,6 @@ class RetryEventService(
                 )
             }
             .flatMap { retryEventRepository.save(it) }
-            .then()
+            .then() // Mono<Void> returned to signal completion without value
     }
 }

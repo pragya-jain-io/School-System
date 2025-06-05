@@ -6,7 +6,13 @@ import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
 import java.util.*
 
-@Document(collection = "retry_events")
+/**
+ * Data class representing a retry event stored in MongoDB.
+ *
+ * This document tracks retry attempts for a given task, such as student onboarding,
+ * including request/response metadata, scheduling info, and status.
+ */
+@Document(collection = "retryEvents")
 data class RetryEvent(
     @Id
     val retryId: UUID = UUID.randomUUID(),

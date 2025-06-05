@@ -4,6 +4,11 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDate
 
+/**
+ * Represents a student entity stored in the 'students' collection.
+ *
+ * Contains essential details for student identification and enrollment.
+ */
 @Document(collection = "students")
 data class Student(
     @Id
