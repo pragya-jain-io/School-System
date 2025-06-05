@@ -30,18 +30,26 @@ class StudentOnboardingConsumer(
         groupId = "school-service",
         containerFactory = "kafkaListenerFactory"
     )
+
     fun listen(event: StudentOnboardingEvent) {
+        // Check if a retry event already exists for this Aadhaar and task type to ensure idempotency.
         retryEventRepository.findByAadhaarAndTaskType(event.aadhaar, "CBSE_ONBOARDING")
             .switchIfEmpty(Mono.defer {
+                // No prior retry found – proceed with processing this onboarding event.
                 logger.info("No existing RetryEvent found for Aadhaar='${event.aadhaar}'. Proceeding to process.")
                 processEvent(event)
                 Mono.empty()
             })
             .subscribe {
+                // Retry already exists – skip duplicate processing.
                 logger.info("Duplicate event for Aadhaar='${event.aadhaar}'. Skipping.")
             }
     }
 
+    /**
+     * Processes the student onboarding event by simulating an API outcome based on Aadhaar last digit.
+     * Determines retry status and saves a new RetryEvent in the database.
+     */
     private fun processEvent(event: StudentOnboardingEvent) {
         val aadhaarLastDigit = event.aadhaar.last()
 
@@ -81,6 +89,7 @@ class StudentOnboardingConsumer(
             status = retryStatus
         )
 
+        // Save the retry event and log outcome once persistence is complete.
         retryEventRepository.save(retryEvent).subscribe {
             logger.info("RetryEvent saved successfully with status='$retryStatus' and HTTP status=${httpStatus.value()}")
         }

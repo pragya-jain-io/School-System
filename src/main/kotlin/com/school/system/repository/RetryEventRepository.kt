@@ -33,5 +33,16 @@ interface RetryEventRepository : ReactiveMongoRepository<RetryEvent, UUID> {
         time: LocalDateTime
     ): Flux<RetryEvent>
 
+
+    /**
+     * Retrieves a single RetryEvent by Aadhaar number and task type.
+     *
+     * This is a key method for implementing idempotency—ensures no duplicate retry events are created
+     * for the same task and same entity (in this case, a student).
+     *
+     * @param aadhaar Unique student identifier used as part of the idempotency key.
+     * @param taskType Logical task category (e.g., "CBSE_ONBOARDING").
+     * @return A Mono containing the found RetryEvent or empty if none exists.
+     */
     fun findByAadhaarAndTaskType(aadhaar: String, taskType: String): Mono<RetryEvent?>
 }
