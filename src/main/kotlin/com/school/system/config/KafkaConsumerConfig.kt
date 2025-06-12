@@ -60,7 +60,7 @@ class KafkaConsumerConfig {
      * Defines a KafkaListenerContainerFactory bean that Spring Kafka uses to create listener containers.
      * Listener containers manage the consumer lifecycle and threading, allowing concurrent consumption.
      *
-     * This factory uses the previously defined consumerFactory to create consumers.
+     * This factory uses the previously defined consumerFactory to create consumers .
      *
      * @return ConcurrentKafkaListenerContainerFactory<String, StudentOnboardingEvent> for annotated listeners
      */
