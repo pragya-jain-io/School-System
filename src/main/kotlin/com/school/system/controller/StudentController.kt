@@ -29,9 +29,11 @@ class StudentController(
      * Sample Request:
      * POST /students
      * Body: {
-     *   "aadhaar": "012345678912",
+     *   "aadhaar": "012345678902",
+     *   "rollNo": "1001",
      *   "name": "Joe",
-     *   ...
+     *   "studentClass": "10",
+     *   "dob": "2012-12-31"
      * }
      */
     @PostMapping

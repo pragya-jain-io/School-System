@@ -4,28 +4,31 @@ import com.school.system.model.enum.RetryStatus
 import com.school.system.repository.RetryConfigRepository
 import com.school.system.repository.RetryEventRepository
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import java.time.LocalDateTime
 
 /**
- * SchedulerService is responsible for managing and executing retry logic at regular intervals.
- * It scans the database for retryable events and processes them according to their retry configuration.
+ * SchedulerService is a background service responsible for processing retryable events
+ * based on configurable rules. It runs periodically and updates the retry event status
+ * depending on the outcome of each retry attempt.
  */
 @Service
 class SchedulerService(
     private val retryEventRepository: RetryEventRepository,
     private val retryConfigRepository: RetryConfigRepository,
-    private val processor: RetryEventProcessorService
+    private val retryOutcomeEvaluator: RetryOutcomeEvaluatorService
 ) {
     private val logger = LoggerFactory.getLogger(SchedulerService::class.java)
 
     /**
-     * Scheduled method that runs every 60 seconds (fixedRate = 60000 ms).
-     * It processes all RetryEvents with status OPEN and scheduled before the current time.
+     * Executes every 60 seconds to process events that are eligible for retry.
+     * It queries for retry events with status OPEN and `nextRunTime` in the past,
+     * applies business logic to determine the retry outcome, and updates the event accordingly.
      */
-    @Scheduled(fixedRate = 120000)
+    @Scheduled(fixedRate = 60000)
     fun retryOpenTasks() {
         logger.info("Scheduler running at ${LocalDateTime.now()}")
 
@@ -38,37 +41,63 @@ class SchedulerService(
             // For each retry event, fetch its configuration and process
             .flatMap { event ->
                 retryConfigRepository.findByTaskType(event.taskType)
-                    // If no config is found, skip the event
                     .switchIfEmpty(Mono.defer {
-                        logger.warn("No config for taskType=${event.taskType}. Skipping.")
+                        logger.warn("No config found for taskType=${event.taskType}. Skipping.")
                         Mono.empty()
                     })
-
-                    // Process retry logic with the found config
                     .flatMap { config ->
-                        // Extract aadhaar from request metadata; if not present, skip
-                        val aadhaar = event.requestMetadata["aadhaar"]?.toString() ?: return@flatMap Mono.empty()
-                        // Determine the outcome of retry using business logic
-                        val (httpStatus, retryStatus) = processor.evaluateRetryOutcome(aadhaar)
+                        // 1. Extract Aadhaar from request metadata
+                        val aadhaar = event.requestMetadata["aadhaar"]?.toString()
+                            ?: return@flatMap Mono.empty()
 
-                        // Check if max retries have been reached
-                        if (event.version >= config.maxRetryCount) {
-                            logger.info("Max retry attempts reached for ${event.aadhaar}. Marking as FAILED.")
+                        // 3. Simulate HTTP response based on last digit
+                        val httpStatus = retryOutcomeEvaluator.evaluateHttpStatus(aadhaar)
+                        logger.info(
+                            """
+                            Mocked: 
+                            HTTP: $httpStatus
+                            Aadhaar: $aadhaar
+                            """.trimIndent()
+                        )
 
-                            val failedEvent = event.copy(
-                                status = RetryStatus.FAILED,
-                                lastRunDate = LocalDateTime.now(),
-                                responseMetadata = mapOf("message" to "Max retries reached")
-                            )
-
-                            return@flatMap retryEventRepository.save(failedEvent)
+                        // 4. Determine retry status based on HTTP response and retry count
+                        val retryStatus = when (httpStatus) {
+                            HttpStatus.OK -> RetryStatus.CLOSED
+                            HttpStatus.CONFLICT -> RetryStatus.FAILED
+                            HttpStatus.INTERNAL_SERVER_ERROR -> {
+                                if (event.version+1 >= config.maxRetryCount) RetryStatus.FAILED
+                                else RetryStatus.OPEN
+                            }
+                            else -> RetryStatus.FAILED
                         }
 
-                        // Otherwise, update retry event with new response and timing info
-                        val updated = processor.updateRetryEvent(event, config.retryAfterInMins, httpStatus, retryStatus)
-                        retryEventRepository.save(updated)
+                        logger.info(
+                            """
+                            Updating retry event:
+                            Student: ${event.aadhaar}
+                            HTTP: $httpStatus
+                            New Status: $retryStatus
+                            Retry Count: ${event.version + 1}/${config.maxRetryCount}
+                            Next Retry: ${LocalDateTime.now().plusMinutes(config.retryAfterInMins.toLong())}
+                            """.trimIndent()
+                        )
+
+                        // 5. Prepare updated RetryEvent
+                        val updatedEvent = event.copy(
+                            responseMetadata = mapOf(
+                                "status" to httpStatus.value(),
+                                "message" to httpStatus.reasonPhrase // This simulates actual HTTP response info
+                            ),
+                            lastRunDate = LocalDateTime.now(),
+                            nextRunTime = LocalDateTime.now().plusMinutes(config.retryAfterInMins.toLong()),
+                            version = event.version + 1,
+                            status = retryStatus
+                        )
+
+                        retryEventRepository.save(updatedEvent)
                     }
             }
+
             // Subscribe to the reactive stream to trigger execution
             .subscribe(
                 { logger.info("Retry processed for student: ${it.aadhaar} | Status: ${it.status}") },

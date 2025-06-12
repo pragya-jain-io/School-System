@@ -10,9 +10,7 @@ import java.util.*
 
 /**
  * Repository interface for managing RetryEvent documents in MongoDB.
- *
  * Extends ReactiveMongoRepository providing reactive CRUD operations on RetryEvent objects.
- *
  * UUID is the type of the ID field for RetryEvent documents.
  */
 
