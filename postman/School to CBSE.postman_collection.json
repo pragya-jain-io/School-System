@@ -1,0 +1,181 @@
+{
+	"info": {
+		"_postman_id": "8edffa2e-1bb8-439f-abaf-2e9625f48cd6",
+		"name": "School to CBSE",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43685578",
+		"_collection_link": "https://pragya-7209889.postman.co/workspace/Pragya's-Workspace~6dbf6e8b-f359-4264-8b10-8c056b5e0eb7/collection/43685578-8edffa2e-1bb8-439f-abaf-2e9625f48cd6?action=share&source=collection_link&creator=43685578"
+	},
+	"item": [
+		{
+			"name": "Internal Server Error",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"aadhaar\": \"099999999902\",\r\n    \"rollNo\": \"1002\",\r\n    \"name\": \"Joe\",\r\n    \"studentClass\": \"10\",\r\n    \"dob\": \"2012-12-31\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/students",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"students"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Conflict",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"aadhaar\": \"099999999901\",\r\n    \"rollNo\": \"1001\",\r\n    \"name\": \"Doe\",\r\n    \"studentClass\": \"10\",\r\n    \"dob\": \"2012-12-31\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/students",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"students"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "OK",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"aadhaar\": \"099999999900\",\r\n    \"rollNo\": \"1000\",\r\n    \"name\": \"Jane\",\r\n    \"studentClass\": \"10\",\r\n    \"dob\": \"2012-12-31\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/students",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"students"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Internal Server Error -> OK",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"aadhaar\": \"089999999900\",\r\n  \"taskType\": \"CBSE_ONBOARDING\",\r\n  \"requestMetadata\": {\r\n    \"aadhaar\": \"089999999900\",\r\n    \"name\": \"Joe\",\r\n    \"rollNo\": \"1002\",\r\n    \"studentClass\": \"10\",\r\n    \"school\": \"ABC Public School\",\r\n    \"dob\": \"2012-12-31\"\r\n  },\r\n  \"responseMetadata\": {\r\n    \"status\": 500,\r\n    \"message\": \"INTERNAL_SERVER_ERROR\"\r\n  },\r\n  \"createdDate\": \"2025-06-12T07:55:17\",\r\n  \"lastRunDate\": \"2025-06-12T07:55:17\",\r\n  \"nextRunTime\": \"2025-06-12T07:56:17\",\r\n  \"version\": 1,\r\n  \"status\": \"OPEN\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/retry-events",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"retry-events"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Internal Server Error -> Conflict",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"aadhaar\": \"089999999901\",\r\n  \"taskType\": \"CBSE_ONBOARDING\",\r\n  \"requestMetadata\": {\r\n    \"aadhaar\": \"089999999901\",\r\n    \"name\": \"Joe\",\r\n    \"rollNo\": \"1002\",\r\n    \"studentClass\": \"10\",\r\n    \"school\": \"ABC Public School\",\r\n    \"dob\": \"2012-12-31\"\r\n  },\r\n  \"responseMetadata\": {\r\n    \"status\": 500,\r\n    \"message\": \"INTERNAL_SERVER_ERROR\"\r\n  },\r\n  \"createdDate\": \"2025-06-12T07:55:17\",\r\n  \"lastRunDate\": \"2025-06-12T07:55:17\",\r\n  \"nextRunTime\": \"2025-06-12T07:56:17\",\r\n  \"version\": 1,\r\n  \"status\": \"OPEN\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/retry-events",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"retry-events"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
