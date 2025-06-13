@@ -5,9 +5,9 @@ This microservice handles student enrollment, stores data, and interacts with a 
 ---
 ## How It Works
 
-1. **Consume Event** → Generate retry event if failure (not duplicate).
+1. **Consume Event** → Generate retry event (not duplicate).
 2. **Scheduler** (every 2 mins) → Picks OPEN events due for retry.
-3. **Process Event** → HTTP status via Aadhaar digit logic.
+3. **Process Event** → HTTP status.
 4. **Update Status** → CLOSED/FAILED/OPEN based on rules and retry count.
 5. **Persist Change** → Save updated `RetryEvent`.
 ---
